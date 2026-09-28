@@ -66,6 +66,7 @@ try:
             self.calendar_window = None
             self.displayed_year = None
             self.displayed_month = None
+            self.selected_date = None
             self.show_gregorian = tk.BooleanVar(value=False)
             self.start_with_windows = tk.BooleanVar(
                 value=self.is_autostart_enabled()
@@ -152,6 +153,7 @@ try:
             today = jdatetime.date.today()
             self.displayed_year = today.year
             self.displayed_month = today.month
+            self.selected_date = None
             self.calendar_window = tk.Toplevel(self.root)
             self.calendar_window.overrideredirect(True)
             self.calendar_window.attributes("-topmost", True)
@@ -260,6 +262,11 @@ try:
             )
 
             for day in range(1, month_length + 1):
+                current_date = jdatetime.date(
+                    self.displayed_year,
+                    self.displayed_month,
+                    day
+                )
                 position = start_column + day - 1
                 row = position // 7 + content_start_row + 1
                 column = 6 - (position % 7)
@@ -268,16 +275,20 @@ try:
                     self.displayed_month == today.month and
                     self.displayed_year == today.year
                 )
-                is_friday = jdatetime.date(
-                    self.displayed_year,
-                    self.displayed_month,
-                    day
-                ).strftime("%A") == "Friday"
-                if is_today:
+                is_selected = current_date == self.selected_date
+                is_friday = current_date.strftime("%A") == "Friday"
+                if is_selected:
+                    foreground = "#ffd1d1" if is_friday else "white"
+                elif is_today:
                     foreground = "#9b1c1c" if is_friday else "#222222"
                 else:
                     foreground = "#ff6b6b" if is_friday else "white"
-                cell_background = "#f4c542" if is_today else "#222222"
+                if is_selected:
+                    cell_background = "#356aa0"
+                elif is_today:
+                    cell_background = "#f4c542"
+                else:
+                    cell_background = "#222222"
 
                 day_cell = tk.Frame(
                     self.calendar_window,
@@ -301,17 +312,17 @@ try:
 
                 clickable_widgets = [day_cell, day_label]
                 if self.show_gregorian.get():
-                    gregorian_day = jdatetime.date(
-                        self.displayed_year,
-                        self.displayed_month,
-                        day
-                    ).togregorian().day
+                    gregorian_day = current_date.togregorian().day
                     gregorian_label = tk.Label(
                         day_cell,
                         text=str(gregorian_day),
                         font=(self.vazirmatn_font.actual("family"), 8),
                         width=3,
-                        fg="#705600" if is_today else "#777777",
+                        fg=(
+                            "#dbeafe" if is_selected else
+                            "#705600" if is_today else
+                            "#777777"
+                        ),
                         bg=cell_background,
                         padx=0,
                         pady=0
@@ -322,8 +333,32 @@ try:
                 for widget in clickable_widgets:
                     widget.bind(
                         "<Button-1>",
-                        lambda event: self.close_calendar()
+                        lambda event, selected_day=day: self.select_day(
+                            selected_day
+                        )
                     )
+
+            if self.selected_date is not None:
+                details_row = (
+                    (start_column + month_length - 1) // 7 +
+                    content_start_row + 2
+                )
+                tk.Label(
+                    self.calendar_window,
+                    text=self.format_selected_date(self.selected_date),
+                    font=(self.vazirmatn_font.actual("family"), 10),
+                    fg="white",
+                    bg="#2d2d2d",
+                    padx=8,
+                    pady=6,
+                    justify="center"
+                ).grid(
+                    row=details_row,
+                    column=0,
+                    columnspan=7,
+                    sticky="ew",
+                    pady=(5, 0)
+                )
 
             self.calendar_window.update_idletasks()
             calendar_width = self.calendar_window.winfo_width()
@@ -414,7 +449,31 @@ try:
                 self.displayed_month,
                 offset
             )
+            self.selected_date = None
             self.render_calendar()
+
+        def select_day(self, day):
+            self.selected_date = jdatetime.date(
+                self.displayed_year,
+                self.displayed_month,
+                day
+            )
+            self.render_calendar()
+
+        @staticmethod
+        def format_selected_date(selected_date):
+            weekday = weekdays_fa[selected_date.strftime("%A")]
+            persian_date = (
+                f"{weekday} {selected_date.day} "
+                f"{months_fa[selected_date.month]} {selected_date.year}"
+            )
+            gregorian_date = selected_date.togregorian()
+            gregorian_text = (
+                f"{gregorian_date.day} "
+                f"{gregorian_months[gregorian_date.month]} "
+                f"{gregorian_date.year}"
+            )
+            return f"{persian_date}\n{gregorian_text}"
 
         @staticmethod
         def shift_month(year, month, offset):
