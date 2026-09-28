@@ -148,7 +148,7 @@ try:
 
             previous_button = tk.Button(
                 self.calendar_window,
-                text="◀",
+                text="▶",
                 command=lambda: self.change_month(-1),
                 font=self.vazirmatn_font,
                 fg="white",
@@ -158,7 +158,7 @@ try:
                 bd=0,
                 cursor="hand2"
             )
-            previous_button.grid(row=0, column=0, sticky="w", padx=4)
+            previous_button.grid(row=0, column=6, sticky="e", padx=4)
 
             title = tk.Label(
                 self.calendar_window,
@@ -172,7 +172,7 @@ try:
 
             next_button = tk.Button(
                 self.calendar_window,
-                text="▶",
+                text="◀",
                 command=lambda: self.change_month(1),
                 font=self.vazirmatn_font,
                 fg="white",
@@ -182,7 +182,7 @@ try:
                 bd=0,
                 cursor="hand2"
             )
-            next_button.grid(row=0, column=6, sticky="e", padx=4)
+            next_button.grid(row=0, column=0, sticky="w", padx=4)
 
             for column, weekday in enumerate(calendar_weekdays):
                 tk.Label(
@@ -192,7 +192,7 @@ try:
                     width=3,
                     fg="#aaaaaa",
                     bg="#222222"
-                ).grid(row=1, column=column, padx=2, pady=2)
+                ).grid(row=1, column=6 - column, padx=2, pady=2)
 
             first_day = jdatetime.date(
                 self.displayed_year,
@@ -208,7 +208,7 @@ try:
             for day in range(1, month_length + 1):
                 position = start_column + day - 1
                 row = position // 7 + 2
-                column = position % 7
+                column = 6 - (position % 7)
                 is_today = (
                     day == today.day and
                     self.displayed_month == today.month and
