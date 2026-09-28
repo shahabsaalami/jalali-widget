@@ -153,7 +153,7 @@ try:
             today = jdatetime.date.today()
             self.displayed_year = today.year
             self.displayed_month = today.month
-            self.selected_date = None
+            self.selected_date = today
             self.calendar_window = tk.Toplevel(self.root)
             self.calendar_window.overrideredirect(True)
             self.calendar_window.attributes("-topmost", True)
