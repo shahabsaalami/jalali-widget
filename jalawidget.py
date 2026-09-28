@@ -185,12 +185,13 @@ try:
             next_button.grid(row=0, column=0, sticky="w", padx=4)
 
             for column, weekday in enumerate(calendar_weekdays):
+                is_friday_header = column == 6
                 tk.Label(
                     self.calendar_window,
                     text=weekday,
                     font=self.vazirmatn_font,
                     width=3,
-                    fg="#aaaaaa",
+                    fg="#ff6b6b" if is_friday_header else "#aaaaaa",
                     bg="#222222"
                 ).grid(row=1, column=6 - column, padx=2, pady=2)
 
@@ -214,12 +215,21 @@ try:
                     self.displayed_month == today.month and
                     self.displayed_year == today.year
                 )
+                is_friday = jdatetime.date(
+                    self.displayed_year,
+                    self.displayed_month,
+                    day
+                ).strftime("%A") == "Friday"
+                if is_today:
+                    foreground = "#9b1c1c" if is_friday else "#222222"
+                else:
+                    foreground = "#ff6b6b" if is_friday else "white"
                 day_label = tk.Label(
                     self.calendar_window,
                     text=str(day),
                     font=self.vazirmatn_font,
                     width=3,
-                    fg="#222222" if is_today else "white",
+                    fg=foreground,
                     bg="#f4c542" if is_today else "#222222",
                     padx=2,
                     pady=2
