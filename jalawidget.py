@@ -1,8 +1,12 @@
 import tkinter as tk
 import jdatetime
-from tkinter import font
+from tkinter import font, messagebox
 import ctypes
+import os
+import subprocess
+import sys
 import traceback
+import winreg
 
 try:
     weekdays_fa = {
@@ -40,6 +44,9 @@ try:
         'Friday': 6
     }
 
+    AUTOSTART_REGISTRY_PATH = r"Software\Microsoft\Windows\CurrentVersion\Run"
+    AUTOSTART_VALUE_NAME = "JalaliDateWidget"
+
     def get_persian_date():
         today = jdatetime.date.today()
         weekday = weekdays_fa.get(today.strftime("%A"), today.strftime("%A"))
@@ -60,6 +67,9 @@ try:
             self.displayed_year = None
             self.displayed_month = None
             self.show_gregorian = tk.BooleanVar(value=False)
+            self.start_with_windows = tk.BooleanVar(
+                value=self.is_autostart_enabled()
+            )
             self.has_moved = False
 
             # لیست فونت‌ها رو چاپ می‌کنیم (برای اطمینان)
@@ -339,10 +349,64 @@ try:
                 variable=self.show_gregorian,
                 command=self.render_calendar
             )
+            menu.add_separator()
+            menu.add_checkbutton(
+                label="اجرا با شروع ویندوز",
+                variable=self.start_with_windows,
+                command=self.set_autostart
+            )
             menu.tk_popup(
                 button.winfo_rootx(),
                 button.winfo_rooty() + button.winfo_height()
             )
+
+        @staticmethod
+        def get_startup_command():
+            if getattr(sys, "frozen", False):
+                command_parts = [sys.executable]
+            else:
+                command_parts = [sys.executable, os.path.abspath(__file__)]
+            return subprocess.list2cmdline(command_parts)
+
+        @staticmethod
+        def is_autostart_enabled():
+            try:
+                with winreg.OpenKey(
+                    winreg.HKEY_CURRENT_USER,
+                    AUTOSTART_REGISTRY_PATH
+                ) as key:
+                    winreg.QueryValueEx(key, AUTOSTART_VALUE_NAME)
+                return True
+            except FileNotFoundError:
+                return False
+
+        def set_autostart(self):
+            try:
+                with winreg.CreateKey(
+                    winreg.HKEY_CURRENT_USER,
+                    AUTOSTART_REGISTRY_PATH
+                ) as key:
+                    if self.start_with_windows.get():
+                        winreg.SetValueEx(
+                            key,
+                            AUTOSTART_VALUE_NAME,
+                            0,
+                            winreg.REG_SZ,
+                            self.get_startup_command()
+                        )
+                    else:
+                        try:
+                            winreg.DeleteValue(key, AUTOSTART_VALUE_NAME)
+                        except FileNotFoundError:
+                            pass
+            except OSError as error:
+                self.start_with_windows.set(
+                    self.is_autostart_enabled()
+                )
+                messagebox.showerror(
+                    "خطا",
+                    f"تنظیم اجرای خودکار ذخیره نشد:\n{error}"
+                )
 
         def change_month(self, offset):
             self.displayed_year, self.displayed_month = self.shift_month(
