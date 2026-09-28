@@ -267,21 +267,53 @@ try:
                     foreground = "#9b1c1c" if is_friday else "#222222"
                 else:
                     foreground = "#ff6b6b" if is_friday else "white"
-                day_label = tk.Label(
+                cell_background = "#f4c542" if is_today else "#222222"
+
+                day_cell = tk.Frame(
                     self.calendar_window,
+                    bg=cell_background,
+                    padx=2,
+                    pady=1
+                )
+                day_cell.grid(row=row, column=column, padx=2, pady=2)
+
+                day_label = tk.Label(
+                    day_cell,
                     text=str(day),
                     font=self.vazirmatn_font,
                     width=3,
                     fg=foreground,
-                    bg="#f4c542" if is_today else "#222222",
-                    padx=2,
-                    pady=2
+                    bg=cell_background,
+                    padx=0,
+                    pady=0
                 )
-                day_label.grid(row=row, column=column, padx=2, pady=2)
-                day_label.bind(
-                    "<Button-1>",
-                    lambda event: self.close_calendar()
-                )
+                day_label.pack()
+
+                clickable_widgets = [day_cell, day_label]
+                if self.show_gregorian.get():
+                    gregorian_day = jdatetime.date(
+                        self.displayed_year,
+                        self.displayed_month,
+                        day
+                    ).togregorian().day
+                    gregorian_label = tk.Label(
+                        day_cell,
+                        text=str(gregorian_day),
+                        font=(self.vazirmatn_font.actual("family"), 8),
+                        width=3,
+                        fg="#705600" if is_today else "#777777",
+                        bg=cell_background,
+                        padx=0,
+                        pady=0
+                    )
+                    gregorian_label.pack()
+                    clickable_widgets.append(gregorian_label)
+
+                for widget in clickable_widgets:
+                    widget.bind(
+                        "<Button-1>",
+                        lambda event: self.close_calendar()
+                    )
 
             self.calendar_window.update_idletasks()
             calendar_width = self.calendar_window.winfo_width()
