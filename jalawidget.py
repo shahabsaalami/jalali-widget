@@ -22,6 +22,13 @@ try:
         10: 'دی', 11: 'بهمن', 12: 'اسفند'
     }
 
+    gregorian_months = {
+        1: 'January', 2: 'February', 3: 'March',
+        4: 'April', 5: 'May', 6: 'June',
+        7: 'July', 8: 'August', 9: 'September',
+        10: 'October', 11: 'November', 12: 'December'
+    }
+
     calendar_weekdays = ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج']
     weekday_columns = {
         'Saturday': 0,
@@ -52,6 +59,7 @@ try:
             self.calendar_window = None
             self.displayed_year = None
             self.displayed_month = None
+            self.show_gregorian = tk.BooleanVar(value=False)
             self.has_moved = False
 
             # لیست فونت‌ها رو چاپ می‌کنیم (برای اطمینان)
@@ -160,6 +168,20 @@ try:
             )
             previous_button.grid(row=0, column=6, sticky="e", padx=4)
 
+            settings_button = tk.Button(
+                self.calendar_window,
+                text="⚙",
+                command=lambda: self.show_settings_menu(settings_button),
+                font=self.vazirmatn_font,
+                fg="#aaaaaa",
+                bg="#222222",
+                activeforeground="white",
+                activebackground="#333333",
+                bd=0,
+                cursor="hand2"
+            )
+            settings_button.grid(row=0, column=1, sticky="w")
+
             title = tk.Label(
                 self.calendar_window,
                 text=f"{months_fa[self.displayed_month]} {self.displayed_year}",
@@ -168,7 +190,7 @@ try:
                 bg="#222222",
                 pady=8
             )
-            title.grid(row=0, column=1, columnspan=5, sticky="ew")
+            title.grid(row=0, column=2, columnspan=3, sticky="ew")
 
             next_button = tk.Button(
                 self.calendar_window,
@@ -184,6 +206,22 @@ try:
             )
             next_button.grid(row=0, column=0, sticky="w", padx=4)
 
+            content_start_row = 1
+            if self.show_gregorian.get():
+                gregorian_range = self.get_gregorian_month_range(
+                    self.displayed_year,
+                    self.displayed_month
+                )
+                tk.Label(
+                    self.calendar_window,
+                    text=gregorian_range,
+                    font=(self.vazirmatn_font.actual("family"), 9),
+                    fg="#aaaaaa",
+                    bg="#222222",
+                    pady=2
+                ).grid(row=1, column=0, columnspan=7, sticky="ew")
+                content_start_row = 2
+
             for column, weekday in enumerate(calendar_weekdays):
                 is_friday_header = column == 6
                 tk.Label(
@@ -193,7 +231,12 @@ try:
                     width=3,
                     fg="#ff6b6b" if is_friday_header else "#aaaaaa",
                     bg="#222222"
-                ).grid(row=1, column=6 - column, padx=2, pady=2)
+                ).grid(
+                    row=content_start_row,
+                    column=6 - column,
+                    padx=2,
+                    pady=2
+                )
 
             first_day = jdatetime.date(
                 self.displayed_year,
@@ -208,7 +251,7 @@ try:
 
             for day in range(1, month_length + 1):
                 position = start_column + day - 1
-                row = position // 7 + 2
+                row = position // 7 + content_start_row + 1
                 column = 6 - (position % 7)
                 is_today = (
                     day == today.day and
@@ -249,6 +292,26 @@ try:
                 y = self.root.winfo_y() + self.root.winfo_height() + 6
             self.calendar_window.geometry(f"+{max(0, x)}+{y}")
 
+        def show_settings_menu(self, button):
+            menu = tk.Menu(
+                self.calendar_window,
+                tearoff=False,
+                font=self.vazirmatn_font,
+                bg="#222222",
+                fg="white",
+                activebackground="#444444",
+                activeforeground="white"
+            )
+            menu.add_checkbutton(
+                label="نمایش ماه میلادی",
+                variable=self.show_gregorian,
+                command=self.render_calendar
+            )
+            menu.tk_popup(
+                button.winfo_rootx(),
+                button.winfo_rooty() + button.winfo_height()
+            )
+
         def change_month(self, offset):
             self.displayed_year, self.displayed_month = self.shift_month(
                 self.displayed_year,
@@ -261,6 +324,26 @@ try:
         def shift_month(year, month, offset):
             month_index = year * 12 + month - 1 + offset
             return divmod(month_index, 12)[0], divmod(month_index, 12)[1] + 1
+
+        @staticmethod
+        def get_gregorian_month_range(year, month):
+            first_day = jdatetime.date(year, month, 1).togregorian()
+            last_day = jdatetime.date(
+                year,
+                month,
+                PersianDateWidget.get_month_length(year, month)
+            ).togregorian()
+            first_name = gregorian_months[first_day.month]
+            last_name = gregorian_months[last_day.month]
+
+            if first_day.month == last_day.month:
+                return f"{first_name} {first_day.year}"
+            if first_day.year == last_day.year:
+                return f"{first_name} - {last_name} {first_day.year}"
+            return (
+                f"{first_name} {first_day.year} - "
+                f"{last_name} {last_day.year}"
+            )
 
         @staticmethod
         def get_month_length(year, month):
