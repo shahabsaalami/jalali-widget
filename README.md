@@ -1,19 +1,55 @@
-# Jalali Date Widget
+# ویجت تاریخ شمسی ویندوز
 
-A lightweight Windows desktop widget that displays today's Jalali date in Persian. Click the widget to open the full current month, drag it to reposition it, and right-click to close it.
+یک ویجت سبک دسکتاپ برای نمایش تاریخ شمسی امروز به زبان فارسی. برنامه با Python و Tkinter ساخته شده و در پایین سمت راست صفحه قرار می‌گیرد.
 
-## Run locally
+## امکانات
+
+- نمایش روز، ماه و سال شمسی به فارسی
+- نمایش تقویم کامل ماه با کلیک چپ
+- مشخص‌کردن روز جاری در تقویم
+- جابه‌جایی ویجت با کشیدن ماوس
+- بستن برنامه با راست‌کلیک
+- پشتیبانی از مقیاس‌بندی DPI ویندوز
+- استفاده از فونت `Vazirmatn FD Medium` در صورت نصب بودن
+
+## پیش‌نیازها
+
+- Windows 10 یا 11
+- Python 3
+
+وابستگی‌ها را نصب کنید:
 
 ```powershell
 python -m pip install -r requirements.txt
+```
+
+## اجرا
+
+```powershell
 python .\jalawidget.py
 ```
 
-## Build the executable
+روی ویجت کلیک کنید تا تقویم ماه باز یا بسته شود. برای تغییر محل آن، ویجت را بکشید و برای خروج روی آن راست‌کلیک کنید.
+
+## ساخت فایل اجرایی
 
 ```powershell
-python -m PyInstaller --clean .\jalawidget.spec
+python -m PyInstaller --clean --noconfirm .\jalawidget.spec
 ```
 
-The Windows executable is created at `dist\jalawidget.exe`.
+فایل اجرایی در مسیر زیر ساخته می‌شود:
 
+```text
+dist\jalawidget.exe
+```
+
+## ساختار پروژه
+
+- `jalawidget.py`: کد اصلی رابط کاربری و تقویم شمسی
+- `jalawidget.spec`: تنظیمات ساخت فایل اجرایی با PyInstaller
+- `requirements.txt`: وابستگی‌های پروژه
+- `AGENTS.md`: راهنمای مشارکت در مخزن
+
+## مشارکت
+
+پیشنهادها و اصلاحات را می‌توانید از طریق Issue یا Pull Request ارسال کنید.
